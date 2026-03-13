@@ -5,8 +5,9 @@ import SigninForm from './_auth/forms/SigninForm'
 import SignupForm from './_auth/forms/SignupForm'
 import AuthLayout from './_auth/AuthLayout'
 import RootLayout from './_root/RootLayout'
-import { Home } from './_root/pages'
+import { AllUsers, CreatePost, EditPost, Home, PostDetails, Profile, Saved, UpdateProfile } from './_root/pages'
 import { Toaster } from 'sonner'
+import Explore from './_root/pages/Explore'
 
 const App = () => {
   return (
