@@ -68,18 +68,16 @@ export async function signInAccount(user: { email: string; password: string }) {
 export async function getCurrentUser() {
   try {
     const currentAccount = await account.get()
-
     if (!currentAccount) throw Error
 
     const currentUser = await databases.listDocuments(
       appwriteConfig.databaseId,
       appwriteConfig.userCollectionId,
-      [Query.equal("accountId", currentAccount.$id)],
+      [Query.equal("accountId", currentAccount.$id)]
     )
 
     if (!currentUser) throw Error
-
-    return currentUser.documents[0]
+    return currentUser.documents[0]  
   } catch (error) {
     console.log(error)
   }
@@ -176,7 +174,7 @@ export async function getRecentPosts() {
     [
       Query.orderDesc("$createdAt"),
       Query.limit(20),
-      Query.select(["*", "creator.*"]), // 👈 זה מאלץ populate של creator
+      // Query.select(["*", "creator.*"]),
     ],
   )
 
@@ -196,7 +194,7 @@ export async function likePost(postId: string, likesArray: string[]) {
       },
     )
 
-    if (!updatedPost) throw Error
+    console.log("updatedPost:", updatedPost)
     return updatedPost
   } catch (error) {
     console.log(error)
@@ -210,7 +208,7 @@ export async function savePost(postId: string, userId: string) {
       appwriteConfig.savesCollectionId,
       ID.unique(),
       {
-        user: userId,
+        users: userId,
         post: postId,
       },
     )

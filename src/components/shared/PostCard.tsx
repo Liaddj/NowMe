@@ -14,7 +14,7 @@ export type IPostDocument = Models.Document & {
   caption?: string
   imageUrl?: string
   imageId?: string
-  likes?: string[]
+  likes?: Models.Document[]
   tags?: string[]
 }
 
