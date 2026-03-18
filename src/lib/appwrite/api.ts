@@ -2,6 +2,7 @@ import { ID, Query } from "appwrite"
 
 import type { INewPost, INewUser } from "@/types"
 import { account, appwriteConfig, avatars, databases, storage } from "./config"
+import { data } from "react-router-dom"
 
 export async function createUserAccount(user: INewUser) {
   try {
@@ -150,14 +151,7 @@ export async function uploadFile(file: File) {
 
 export function getFilePreview(fileId: string) {
   try {
-    const fileUrl = storage.getFilePreview(
-      appwriteConfig.storageId,
-      fileId,
-      2000,
-      2000,
-      "top",
-      100,
-    )
+    const fileUrl = storage.getFileView(appwriteConfig.storageId, fileId)
 
     return String(fileUrl)
   } catch (error) {
@@ -179,10 +173,66 @@ export async function getRecentPosts() {
   const posts = await databases.listDocuments(
     appwriteConfig.databaseId,
     appwriteConfig.postCollectionId,
-    [Query.orderDesc("$createdAt"), Query.limit(20)],
+    [
+      Query.orderDesc("$createdAt"),
+      Query.limit(20),
+      Query.select(["*", "creator.*"]), // 👈 זה מאלץ populate של creator
+    ],
   )
 
   if (!posts) throw Error
 
   return posts
+}
+
+export async function likePost(postId: string, likesArray: string[]) {
+  try {
+    const updatedPost = await databases.updateDocument(
+      appwriteConfig.databaseId,
+      appwriteConfig.postCollectionId,
+      postId,
+      {
+        likes: likesArray,
+      },
+    )
+
+    if (!updatedPost) throw Error
+    return updatedPost
+  } catch (error) {
+    console.log(error)
+  }
+}
+
+export async function savePost(postId: string, userId: string) {
+  try {
+    const updatedPost = await databases.createDocument(
+      appwriteConfig.databaseId,
+      appwriteConfig.savesCollectionId,
+      ID.unique(),
+      {
+        user: userId,
+        post: postId,
+      },
+    )
+
+    if (!updatedPost) throw Error
+    return updatedPost
+  } catch (error) {
+    console.log(error)
+  }
+}
+
+export async function deletedSavePost(savedRecordId: string) {
+  try {
+    const statusCode = await databases.deleteDocument(
+      appwriteConfig.databaseId,
+      appwriteConfig.savesCollectionId,
+      savedRecordId,
+    )
+
+    if (!statusCode) throw Error
+    return { status: "ok" }
+  } catch (error) {
+    console.log(error)
+  }
 }

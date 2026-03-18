@@ -53,7 +53,7 @@ const PostForm = ({ post }: PostFormProps) => {
 
     navigate("/")
   }
-console.log("Current User Context:", user);
+
   return (
     <Form {...form}>
       <div className="sm:w-420 flex-center flex-col">
