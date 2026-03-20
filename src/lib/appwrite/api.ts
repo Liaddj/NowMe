@@ -1,6 +1,6 @@
 import { ID, Query } from "appwrite"
 
-import type { INewPost, INewUser } from "@/types"
+import type { INewPost, INewUser, IUpdatePost } from "@/types"
 import { account, appwriteConfig, avatars, databases, storage } from "./config"
 import { data } from "react-router-dom"
 
@@ -73,11 +73,14 @@ export async function getCurrentUser() {
     const currentUser = await databases.listDocuments(
       appwriteConfig.databaseId,
       appwriteConfig.userCollectionId,
-      [Query.equal("accountId", currentAccount.$id)]
+      [
+        Query.equal("accountId", currentAccount.$id),
+        Query.select(["*", "save.*", "liked.*"]) 
+      ],
     )
 
     if (!currentUser) throw Error
-    return currentUser.documents[0]  
+    return currentUser.documents[0]
   } catch (error) {
     console.log(error)
   }
@@ -174,10 +177,9 @@ export async function getRecentPosts() {
     [
       Query.orderDesc("$createdAt"),
       Query.limit(20),
-      // Query.select(["*", "creator.*"]),
+      Query.select(["*", "creator.*", "likes.*", "save.*"]),
     ],
   )
-
   if (!posts) throw Error
 
   return posts
@@ -230,6 +232,84 @@ export async function deletedSavePost(savedRecordId: string) {
 
     if (!statusCode) throw Error
     return { status: "ok" }
+  } catch (error) {
+    console.log(error)
+  }
+}
+
+export async function getPostById(postId:string) {
+  try {
+    const post = await databases.getDocument(
+      appwriteConfig.databaseId,
+      appwriteConfig.postCollectionId,
+      postId,
+    )
+
+    return post
+  } catch (error) {
+    console.log(error)
+  }
+}
+
+export async function updatePost(post: IUpdatePost) {
+  const hasFileUpdate = post.file.length > 0
+
+  try {
+    let image = {
+      imageUrl: post.imageUrl,
+      imageId: post.imageId,
+    }
+if(hasFileUpdate) {
+  const uploadedFile = await uploadFile(post.file[0])
+  if (!uploadedFile) throw Error
+
+  const fileUrl = getFilePreview(uploadedFile.$id)
+  
+  if (!fileUrl) {
+    deleteFile(uploadedFile.$id)
+    throw Error
+  }
+
+  image = {...image, imageUrl: fileUrl, imageId: uploadedFile.$id}
+}
+
+    const tags = post.tags?.replace(/ /g, "").split(",") || []
+
+    const updatedPost = await databases.updateDocument(
+      appwriteConfig.databaseId,
+      appwriteConfig.postCollectionId,
+      post.postId,
+      {
+        caption: post.caption,
+        imageUrl: image.imageUrl,
+        imageId: image.imageId,
+        location: post.location,
+        tags: tags,
+      },
+    )
+
+    if (!updatedPost) {
+      await deleteFile(post.imageId)
+      throw Error
+    }
+
+    return updatedPost
+  } catch (error) {
+    console.log(error)
+  }
+}
+
+export async function deletePost(postId: string, imageId: string) {
+  if(!postId || !imageId) throw Error
+
+  try {
+    await databases.deleteDocument(
+      appwriteConfig.databaseId,
+      appwriteConfig.postCollectionId,
+      postId
+    )
+
+    return { status: 'ok'}
   } catch (error) {
     console.log(error)
   }

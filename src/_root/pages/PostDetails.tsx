@@ -1,8 +1,14 @@
-import React from 'react'
+import { useGetPostById } from "@/lib/react-query/queriesAndMutation"
+import { useParams } from "react-router-dom"
 
 const PostDetails = () => {
+  const { id } = useParams()
+  const { data: post, isPending } = useGetPostById(id || "")
   return (
-    <div>PostDetails</div>
+    <div className="post_details-container">
+
+
+    </div>
   )
 }
 
