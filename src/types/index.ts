@@ -1,4 +1,4 @@
-import type { Models } from "appwrite"  
+import type { Models } from "appwrite"
 
 export type INavLink = {
   imgURL: string;
@@ -28,17 +28,17 @@ export type INewPost = {
   caption: string;
   file: File[];
   location?: string;
-  tags?: string[];
+  tags?: string;
 };
 
 export type IUpdatePost = {
   postId: string;
   caption: string;
   imageId: string;
- imageUrl: URL | string;
+  imageUrl: URL | string;
   file: File[];
   location?: string;
-  tags?: string[];
+  tags?: string;
 };
 export interface IUser extends Models.Document {
   name: string;
@@ -72,4 +72,3 @@ export type INewUser = {
   username: string;
   password: string;
 };
-

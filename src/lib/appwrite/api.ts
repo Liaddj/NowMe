@@ -2,7 +2,6 @@ import { ID, Query } from "appwrite"
 import { mapPost, mapPosts, mapUser } from "./mappers";
 
 import type { INewPost, INewUser, IUpdatePost, IPost, IUser } from "@/types"
-import type { Models } from "appwrite"
 import { account, appwriteConfig, avatars, databases, storage } from "./config"
 
 export async function createUserAccount(user: INewUser) {
@@ -37,7 +36,7 @@ export async function saveUserToDB(user: {
   accountId: string
   email: string
   name: string
-  imageUrl: URL
+  imageUrl: string
   username?: string
 }) {
   try {
@@ -313,7 +312,10 @@ export async function getInfinitePosts({ pageParam }: { pageParam: string }) {
 
     if (!posts) throw Error
 
-    return posts
+    return {
+      ...posts,
+      documents: mapPosts(posts.documents),
+    }
   } catch (error) {
     console.log(error)
   }
@@ -331,7 +333,10 @@ export async function SearchPosts(searchTerm: string) {
 
     if (!posts) throw Error
 
-    return posts
+    return {
+      ...posts,
+      documents: mapPosts(posts.documents),
+    }
   } catch (error) {
     console.log(error)
     throw error

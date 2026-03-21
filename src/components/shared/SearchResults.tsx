@@ -1,12 +1,12 @@
-import React from "react"
 import type { IPost } from "@/types"
-import type { Models } from "appwrite"
 import Loader from "./Loader"
 import GridPostList from "./GridPostList"
 
 type SearchResultsProps = {
   isSearchFetching: boolean
-  searchedPosts: Models.DocumentList<IPost>
+  searchedPosts?: {
+    documents: IPost[]
+  }
 }
 
 const SearchResults = ({

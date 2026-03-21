@@ -1,6 +1,5 @@
 import { useUserContext } from "@/context/AuthContext"
 import type { IPost } from "@/types"
-import PostCard from "./PostCard"
 import { Link } from "react-router-dom"
 import PostStats from "./PostStats"
 
@@ -30,13 +29,13 @@ const GridPostList = ({
           </Link>
 
           <div className="grid-post_user">
-            {user && (
+            {showUser && user && (
               <div className="flex items-center justify-start gap-2 flex-1">
                 <img src={post.creator.imageUrl} alt="creator" className="h-8 w-8 rounded-full" />
                 <p className="line-clamp-1">{post.creator.name}</p>
               </div>
             )}
-            {showStats && <PostStats post={post} userId={user.id} />}
+            {showStats && <PostStats post={post} userId={user.$id} />}
           </div>
         </li>
       ))}

@@ -23,7 +23,6 @@ import {
   useCreatePost,
   useUpdatePost,
 } from "@/lib/react-query/queriesAndMutation"
-import { act } from "react"
 
 type PostFormProps = {
   post?: IPost
@@ -67,7 +66,7 @@ const PostForm = ({ post, action }: PostFormProps) => {
 
     const newPost = await createPost({
       ...values,
-      userId: user.id,
+      userId: user.$id,
     })
 
     if (!newPost) {
@@ -109,7 +108,7 @@ const PostForm = ({ post, action }: PostFormProps) => {
               <FormControl>
                 <FileUploader
                   fieldChange={field.onChange}
-                  mediaUrl={post?.imageUrl}
+                  mediaUrl={post?.imageUrl || ""}
                 />
               </FormControl>
               <FormMessage className="shad-form_message" />

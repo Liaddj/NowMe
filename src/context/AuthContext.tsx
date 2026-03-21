@@ -3,13 +3,21 @@ import type { IContextType, IUser } from '@/types'
 import {createContext, useContext,useEffect,useState} from 'react'
 import { useNavigate } from 'react-router-dom'
 
-export const INITIAL_USER = {
-    id: '',
+export const INITIAL_USER: IUser = {
+    $id: '',
+    $sequence: 0,
+    $collectionId: '',
+    $databaseId: '',
+    $createdAt: '',
+    $updatedAt: '',
+    $permissions: [],
     name: '',
     username: '',
     email: '',
     imageUrl: '',
     bio: '',
+    accountId: '',
+    save: [],
 }
 
 const INITIAL_STATE = {
@@ -34,14 +42,7 @@ const AuthProvider = ({children} : {children: React.ReactNode}) => {
             const currentAccount = await getCurrentUser()
 
             if(currentAccount) {
-                setUser({
-                    id: currentAccount.$id,
-                    name: currentAccount.name,
-                    username: currentAccount.username,
-                    email: currentAccount.email,
-                    imageUrl: currentAccount.imageUrl,
-                    bio: currentAccount.bio
-                })
+                setUser(currentAccount)
 
                 setIsAuthenticated(true)
                 return true
