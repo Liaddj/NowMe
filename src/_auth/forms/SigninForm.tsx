@@ -2,7 +2,7 @@
 import {zodResolver} from "@hookform/resolvers/zod"
 import { Link,useNavigate } from "react-router-dom"
 
-import {Form, FormControl,FormField,FormItem,FormLabel,FormMessage,
+import {Form, FormControl,FormField,FormItem,FormLabel,
 } from "@/components/ui/form"
 import { toast } from "sonner"
 import { Input } from "@/components/ui/input"
@@ -17,10 +17,10 @@ import { useUserContext } from "@/context/AuthContext"
 
 const SigninForm = () => {
 
-  const { checkAuthUser, isPending: isUserLoading} = useUserContext()
+  const { checkAuthUser, isLoading: isUserLoading} = useUserContext()
   const navigate = useNavigate()
 
-  const {mutateAsync: signInAccount, isPending} = useSingInAccount()
+  const {mutateAsync: signInAccount, isPending: isSigningIn} = useSingInAccount()
 
   const form = useForm<z.infer<typeof SigninValidation>>({
     resolver: zodResolver(SigninValidation),
@@ -88,7 +88,7 @@ const SigninForm = () => {
         )}
         />
         <Button type="submit" className="shad-button_primary">
-          {isUserLoading ? (
+          {isUserLoading || isSigningIn? (
             <div className="flex-center gap-2">
               <Loader /> Loading...
             </div>
