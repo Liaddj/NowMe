@@ -3,17 +3,20 @@ import { useUserContext } from "@/context/AuthContext"
 import Loader from "@/components/shared/Loader"
 
 const Saved = () => {
-  const { user } = useUserContext() 
+  const { user } = useUserContext()
 
-const savedPosts = user.save
-  .filter((saveRecord: any) => saveRecord.post && typeof saveRecord.post === 'object')
-  .map((saveRecord: any) => ({
-    ...saveRecord.post,
-    creator: {
-      imageUrl: user.imageUrl,
-    },
-  }))
-  .reverse();
+  const savedPosts = (user.save ?? [])
+    .filter(
+      (saveRecord: any) =>
+        saveRecord.post && typeof saveRecord.post === "object",
+    )
+    .map((saveRecord: any) => ({
+      ...saveRecord.post,
+      creator: {
+        imageUrl: user.imageUrl,
+      },
+    }))
+    .reverse()
 
   return (
     <div className="saved-container">
