@@ -1,6 +1,8 @@
 import { ID, Query } from "appwrite"
+import { mapPost, mapPosts, mapUser } from "./mappers";
 
-import type { INewPost, INewUser, IUpdatePost } from "@/types"
+import type { INewPost, INewUser, IUpdatePost, IPost, IUser } from "@/types"
+import type { Models } from "appwrite"
 import { account, appwriteConfig, avatars, databases, storage } from "./config"
 
 export async function createUserAccount(user: INewUser) {
@@ -64,25 +66,20 @@ export async function signInAccount(user: { email: string; password: string }) {
   }
 }
 
-export async function getCurrentUser() {
-  try {
-    const currentAccount = await account.get()
-    if (!currentAccount) throw Error
+export async function getCurrentUser(): Promise<IUser> {
+  const accountData = await account.get();
 
-    const currentUser = await databases.listDocuments(
-      appwriteConfig.databaseId,
-      appwriteConfig.userCollectionId,
-      [
-        Query.equal("accountId", currentAccount.$id),
-        Query.select(["*", "save.*", "liked.*"]),
-      ],
-    )
+  const res = await databases.listDocuments(
+    appwriteConfig.databaseId,
+    appwriteConfig.userCollectionId,
+    [Query.equal("accountId", accountData.$id)]
+  );
 
-    if (!currentUser) throw Error
-    return currentUser.documents[0]
-  } catch (error) {
-    console.log(error)
+  if (!res.documents.length) {
+    throw new Error("User not found");
   }
+
+  return mapUser(res.documents[0]);
 }
 
 export async function signOutAccount() {
@@ -95,46 +92,33 @@ export async function signOutAccount() {
   }
 }
 
-export async function createPost(post: INewPost) {
-  try {
-    const uploadedFile = await uploadFile(post.file[0])
+export async function createPost(post: INewPost): Promise<IPost> {
+  const uploadedFile = await uploadFile(post.file[0]);
+  if (!uploadedFile) throw new Error("Upload failed");
 
-    if (!uploadedFile) throw Error
+  const fileUrl = getFilePreview(uploadedFile.$id);
+  if (!fileUrl) throw new Error("Preview failed");
 
-    const fileUrl = getFilePreview(uploadedFile.$id)
+  const tags = post.tags
+    ? post.tags.replace(/ /g, "").split(",")
+    : [];
 
-    if (!fileUrl) {
-      deleteFile(uploadedFile.$id)
-      throw Error
+  const newPost = await databases.createDocument(
+    appwriteConfig.databaseId,
+    appwriteConfig.postCollectionId,
+    ID.unique(),
+    {
+      creator: post.userId,
+      caption: post.caption,
+      imageUrl: fileUrl,
+      imageId: uploadedFile.$id,
+      location: post.location,
+      tags,
     }
+  );
 
-    const tags = post.tags?.replace(/ /g, "").split(",") || []
-
-    const newPost = await databases.createDocument(
-      appwriteConfig.databaseId,
-      appwriteConfig.postCollectionId,
-      ID.unique(),
-      {
-        creator: post.userId,
-        caption: post.caption,
-        imageUrl: fileUrl,
-        imageId: uploadedFile.$id,
-        location: post.location,
-        tags: tags,
-      },
-    )
-
-    if (!newPost) {
-      await deleteFile(uploadedFile.$id)
-      throw Error
-    }
-
-    return newPost
-  } catch (error) {
-    console.log(error)
-  }
+  return mapPost(newPost);
 }
-
 export async function uploadFile(file: File) {
   try {
     const uploadedFile = await storage.createFile(
@@ -169,19 +153,18 @@ export async function deleteFile(fileId: string) {
   }
 }
 
-export async function getRecentPosts() {
-  const posts = await databases.listDocuments(
+export async function getRecentPosts(): Promise<IPost[]> {
+  const res = await databases.listDocuments(
     appwriteConfig.databaseId,
     appwriteConfig.postCollectionId,
     [
       Query.orderDesc("$createdAt"),
       Query.limit(20),
-      Query.select(["*", "creator.*", "likes.*", "save.*"]),
-    ],
-  )
-  if (!posts) throw Error
+      Query.select(["*", "creator.*", "likes.*"]),
+    ]
+  );
 
-  return posts
+  return mapPosts(res.documents);
 }
 
 export async function likePost(postId: string, likesArray: string[]) {
@@ -235,19 +218,15 @@ export async function deletedSavePost(savedRecordId: string) {
   }
 }
 
-export async function getPostById(postId: string) {
-  try {
-    const post = await databases.getDocument(
-      appwriteConfig.databaseId,
-      appwriteConfig.postCollectionId,
-      postId,
-      [Query.select(["*", "creator.*", "likes.*"])],
-    )
+export async function getPostById(postId: string): Promise<IPost> {
+  const doc = await databases.getDocument(
+    appwriteConfig.databaseId,
+    appwriteConfig.postCollectionId,
+    postId,
+    [Query.select(["*", "creator.*", "likes.*"])]
+  );
 
-    return post
-  } catch (error) {
-    console.log(error)
-  }
+  return mapPost(doc);
 }
 
 export async function updatePost(post: IUpdatePost) {

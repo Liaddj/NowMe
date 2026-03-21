@@ -28,7 +28,7 @@ export type INewPost = {
   caption: string;
   file: File[];
   location?: string;
-  tags?: string;
+  tags?: string[];
 };
 
 export type IUpdatePost = {
@@ -38,23 +38,32 @@ export type IUpdatePost = {
  imageUrl: URL | string;
   file: File[];
   location?: string;
-  tags?: string;
+  tags?: string[];
 };
-
-export type IUser = {  
-  id: string;
+export interface IUser extends Models.Document {
   name: string;
   username: string;
   email: string;
   imageUrl: string;
   bio: string;
-  accountId?: string;
-  save?: Array<{           
-    $id: string
+  accountId: string;
+
+  save?: {
+    $id: string;
     post: {
-      $id: string
-    }
-  }>
+      $id: string;
+    };
+  }[];
+}
+
+export interface IPost extends Models.Document {
+  caption: string;
+  location?: string;
+  tags: string[];
+  imageUrl: string;
+  imageId: string;
+  creator: IUser;
+  likes: string[];
 }
 
 export type INewUser = {
@@ -63,3 +72,4 @@ export type INewUser = {
   username: string;
   password: string;
 };
+

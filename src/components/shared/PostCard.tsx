@@ -1,25 +1,11 @@
 import { useUserContext } from "@/context/AuthContext"
 import { formatDateStringAgo } from "@/lib/utils"
-import type { Models } from "appwrite"
+import type { IPost } from "@/types"
 import { Link } from "react-router-dom"
 import PostStats from "./PostStats"
 
-export type IPostDocument = Models.Document & {
-  creator: {
-    $id: string
-    name: string
-    imageUrl: string
-  }
-  location: string
-  caption?: string
-  imageUrl?: string
-  imageId?: string
-  likes: Models.Document[]
-  tags?: string[]
-}
-
 type PostCardProps = {
-  post: IPostDocument
+  post: IPost
 }
 
 const PostCard = ({ post }: PostCardProps) => {

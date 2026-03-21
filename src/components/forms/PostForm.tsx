@@ -16,7 +16,7 @@ import * as z from "zod"
 import { Textarea } from "../ui/textarea"
 import FileUploader from "../shared/FileUploader"
 import { postValidation } from "@/lib/validation"
-import type { Models } from "appwrite"
+import type { IPost } from "@/types"
 import { useUserContext } from "@/context/AuthContext"
 import { toast } from "sonner"
 import {
@@ -26,7 +26,7 @@ import {
 import { act } from "react"
 
 type PostFormProps = {
-  post?: Models.Document
+  post?: IPost
   action: "Create" | "Update"
 }
 

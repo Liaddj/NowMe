@@ -8,25 +8,18 @@ import {
   useDeleteSavedPost,
   useGetCurrentUser,
 } from "@/lib/react-query/queriesAndMutation"
-import type { Models } from "appwrite"
+import type { IPost, IUser } from "@/types"
 import Loader from "./Loader"
 
 type PostStatsProps = {
-  post: Models.Document
+  post: IPost
   userId: string
-}
-
-type SaveRecord = Models.Document & {
-  post?: Models.Document | string
 }
 
 const PostStats = ({ post, userId }: PostStatsProps) => {
   const location = useLocation()
 
-
-const likesList = post?.likes?.map((user: Models.Document | string) => 
-    typeof user === "string" ? user : user.$id
-  ) || []
+  const likesList = post?.likes || []
 
   const [likes, setLikes] = useState<string[]>(likesList)
   const [isSaved, setIsSaved] = useState(false)
@@ -37,14 +30,9 @@ const likesList = post?.likes?.map((user: Models.Document | string) =>
     useDeleteSavedPost()
 
   const { data: currentUser } = useGetCurrentUser()
-  const savedPostRecord = currentUser?.save?.find((record: SaveRecord) => {
-    if (!record.post) return false
-
-    const recordPostId =
-      typeof record.post === "string" ? record.post : record.post.$id
-
-    return recordPostId === post?.$id
-  })
+  const savedPostRecord = currentUser?.save?.find(
+    (record: NonNullable<IUser["save"]>[number]) => record.post?.$id === post?.$id
+  )
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
