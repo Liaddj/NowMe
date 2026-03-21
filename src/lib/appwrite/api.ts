@@ -2,7 +2,6 @@ import { ID, Query } from "appwrite"
 
 import type { INewPost, INewUser, IUpdatePost } from "@/types"
 import { account, appwriteConfig, avatars, databases, storage } from "./config"
-import { data } from "react-router-dom"
 
 export async function createUserAccount(user: INewUser) {
   try {
@@ -22,7 +21,7 @@ export async function createUserAccount(user: INewUser) {
       name: newAccount.name,
       email: newAccount.email,
       username: user.username,
-      imageUrl: avatarUrl,
+      imageUrl: avatarUrl.toString(),
     })
 
     return newUser
@@ -315,7 +314,7 @@ export async function deletePost(postId: string, imageId: string) {
   }
 }
 
-export async function getInfinitePosts({ pageParam }: { pageParam: number }) {
+export async function getInfinitePosts({ pageParam }: { pageParam: string }) {
   const querys: any[] = [
     Query.orderDesc("$updatedAt"),
     Query.limit(10),
@@ -323,7 +322,7 @@ export async function getInfinitePosts({ pageParam }: { pageParam: number }) {
   ]
 
   if (pageParam) {
-    querys.push(Query.cursorAfter(pageParam.toString()))
+    querys.push(Query.cursorAfter(pageParam))
   }
 
   try {
