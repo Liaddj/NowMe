@@ -11,10 +11,12 @@ import {
   createUserAccount,
   deletedSavePost,
   getCurrentUser,
+  getInfinitePosts,
   getPostById,
   getRecentPosts,
   likePost,
   savePost,
+  SearchPosts,
   signInAccount,
   signOutAccount,
   updatePost,
@@ -131,21 +133,20 @@ export const useDeleteSavedPost = () => {
 export const useGetCurrentUser = () => {
   return useQuery({
     queryKey: [QUERY_KEYS.GET_CURRENT_USER],
-    queryFn: getCurrentUser
+    queryFn: getCurrentUser,
   })
 }
-
 
 export const useGetPostById = (postId: string) => {
   return useQuery({
     queryKey: [QUERY_KEYS.GET_POST_BY_ID, postId],
     queryFn: () => getPostById(postId),
-    enabled: !!postId
+    enabled: !!postId,
   })
 }
 
 export const useUpdatePost = () => {
-const queryClient = useQueryClient()
+  const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: (post: IUpdatePost) => updatePost(post),
@@ -153,20 +154,42 @@ const queryClient = useQueryClient()
       queryClient.invalidateQueries({
         queryKey: [QUERY_KEYS.GET_POST_BY_ID, data?.$id],
       })
-    }
+    },
   })
 }
 
 export const useDeletePost = () => {
-const queryClient = useQueryClient()
+  const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({postId, imageId}: {postId: string, imageId: string}) => deletePost(postId, imageId),
+    mutationFn: ({ postId, imageId }: { postId: string; imageId: string }) =>
+      deletePost(postId, imageId),
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: [QUERY_KEYS.GET_RECENT_POSTS],
       })
-    }
+    },
   })
 }
 
+export const useGetPosts = () => {
+  return useInfiniteQuery({
+    queryKey: [QUERY_KEYS.GET_INFINITE_POSTS],
+    queryFn: getInfinitePosts,
+    getNextPageParam: (lastPage) => {
+      if (lastPage && lastPage.documents.length === 0) return null
+
+      const lastId = lastPage.documents[lastPage.documents.length - 1].$id
+
+      return lastId
+    },
+  })
+}
+
+export const useSearchPosts = (searchTerm: string) => {
+  return useQuery({
+    queryKey: [QUERY_KEYS.SEARCH_POSTS, searchTerm],
+    queryFn: () => SearchPosts(searchTerm),
+    enabled: !!searchTerm,
+  })
+}

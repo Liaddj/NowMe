@@ -24,7 +24,7 @@ const PostStats = ({ post, userId }: PostStatsProps) => {
   const location = useLocation()
 
 
-const likesList = post.likes?.map((user: Models.Document | string) => 
+const likesList = post?.likes?.map((user: Models.Document | string) => 
     typeof user === "string" ? user : user.$id
   ) || []
 
@@ -43,7 +43,7 @@ const likesList = post.likes?.map((user: Models.Document | string) =>
     const recordPostId =
       typeof record.post === "string" ? record.post : record.post.$id
 
-    return recordPostId === post.$id
+    return recordPostId === post?.$id
   })
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -63,7 +63,7 @@ const likesList = post.likes?.map((user: Models.Document | string) =>
     }
 
     setLikes(newLikes)
-    likePost({ postId: post.$id, likesArray: newLikes })
+    likePost({ postId: post?.$id || "", likesArray: newLikes })
   }
 
   const handleSavePost = (e: React.MouseEvent) => {
@@ -74,7 +74,7 @@ const likesList = post.likes?.map((user: Models.Document | string) =>
       return deleteSavePost(savedPostRecord.$id)
     }
 
-    savePost({ postId: post.$id, userId: userId })
+    savePost({ postId: post?.$id || "", userId: userId })
     setIsSaved(true)
   }
 

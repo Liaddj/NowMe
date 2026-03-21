@@ -75,7 +75,7 @@ export async function getCurrentUser() {
       appwriteConfig.userCollectionId,
       [
         Query.equal("accountId", currentAccount.$id),
-        Query.select(["*", "save.*", "liked.*"]) 
+        Query.select(["*", "save.*", "liked.*"]),
       ],
     )
 
@@ -196,7 +196,6 @@ export async function likePost(postId: string, likesArray: string[]) {
       },
     )
 
-    console.log("updatedPost:", updatedPost)
     return updatedPost
   } catch (error) {
     console.log(error)
@@ -237,12 +236,13 @@ export async function deletedSavePost(savedRecordId: string) {
   }
 }
 
-export async function getPostById(postId:string) {
+export async function getPostById(postId: string) {
   try {
     const post = await databases.getDocument(
       appwriteConfig.databaseId,
       appwriteConfig.postCollectionId,
       postId,
+      [Query.select(["*", "creator.*", "likes.*"])],
     )
 
     return post
@@ -259,19 +259,19 @@ export async function updatePost(post: IUpdatePost) {
       imageUrl: post.imageUrl,
       imageId: post.imageId,
     }
-if(hasFileUpdate) {
-  const uploadedFile = await uploadFile(post.file[0])
-  if (!uploadedFile) throw Error
+    if (hasFileUpdate) {
+      const uploadedFile = await uploadFile(post.file[0])
+      if (!uploadedFile) throw Error
 
-  const fileUrl = getFilePreview(uploadedFile.$id)
-  
-  if (!fileUrl) {
-    deleteFile(uploadedFile.$id)
-    throw Error
-  }
+      const fileUrl = getFilePreview(uploadedFile.$id)
 
-  image = {...image, imageUrl: fileUrl, imageId: uploadedFile.$id}
-}
+      if (!fileUrl) {
+        deleteFile(uploadedFile.$id)
+        throw Error
+      }
+
+      image = { ...image, imageUrl: fileUrl, imageId: uploadedFile.$id }
+    }
 
     const tags = post.tags?.replace(/ /g, "").split(",") || []
 
@@ -300,17 +300,62 @@ if(hasFileUpdate) {
 }
 
 export async function deletePost(postId: string, imageId: string) {
-  if(!postId || !imageId) throw Error
+  if (!postId || !imageId) throw Error
 
   try {
     await databases.deleteDocument(
       appwriteConfig.databaseId,
       appwriteConfig.postCollectionId,
-      postId
+      postId,
     )
 
-    return { status: 'ok'}
+    return { status: "ok" }
   } catch (error) {
     console.log(error)
+  }
+}
+
+export async function getInfinitePosts({ pageParam }: { pageParam: number }) {
+  const querys: any[] = [
+    Query.orderDesc("$updatedAt"),
+    Query.limit(10),
+    Query.select(["*", "creator.*", "likes.*"]),
+  ]
+
+  if (pageParam) {
+    querys.push(Query.cursorAfter(pageParam.toString()))
+  }
+
+  try {
+    const posts = await databases.listDocuments(
+      appwriteConfig.databaseId,
+      appwriteConfig.postCollectionId,
+      querys,
+    )
+
+    if (!posts) throw Error
+
+    return posts
+  } catch (error) {
+    console.log(error)
+  }
+}
+export async function SearchPosts(searchTerm: string) {
+  try {
+    const posts = await databases.listDocuments(
+      appwriteConfig.databaseId,
+      appwriteConfig.postCollectionId,
+      [
+        Query.search("caption", searchTerm),
+        Query.select(["*", "creator.*", "likes.*"]),
+      ],
+    )
+
+    if (!posts) throw Error
+
+    return posts
+  } catch (error) {
+    console.log(error)
+    throw error
   }
 }
