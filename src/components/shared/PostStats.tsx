@@ -19,10 +19,11 @@ type PostStatsProps = {
 const PostStats = ({ post, userId }: PostStatsProps) => {
   const location = useLocation()
 
-  const likesList = post?.likes || []
+  const likesList = post?.likes?.map((user: any) => user.$id || user) || []
 
   const [likes, setLikes] = useState<string[]>(likesList)
   const [isSaved, setIsSaved] = useState(false)
+  const [savedRecordId, setSavedRecordId] = useState<string | null>(null)
 
   const { mutate: likePost } = useLikePost()
   const { mutate: savePost, isPending: isSavingPost } = useSavePost()
@@ -30,14 +31,24 @@ const PostStats = ({ post, userId }: PostStatsProps) => {
     useDeleteSavedPost()
 
   const { data: currentUser } = useGetCurrentUser()
+
   const savedPostRecord = currentUser?.save?.find(
-    (record: NonNullable<IUser["save"]>[number]) => record.post?.$id === post?.$id
+    (record: NonNullable<IUser["save"]>[number]) => {
+      const savedPostId =
+        typeof record.post === "string" ? record.post : record.post?.$id
+
+      return savedPostId === post.$id
+    },
   )
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     setIsSaved(!!savedPostRecord)
-  }, [currentUser])
+    setSavedRecordId(savedPostRecord?.$id ?? null)
+  }, [savedPostRecord])
+
+  useEffect(() => {
+    setLikes(post?.likes?.map((user: any) => user.$id || user) || [])
+  }, [post])
 
   const handleLikePost = (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -57,13 +68,35 @@ const PostStats = ({ post, userId }: PostStatsProps) => {
   const handleSavePost = (e: React.MouseEvent) => {
     e.stopPropagation()
 
-    if (savedPostRecord) {
+    if (isSavingPost || isDeletingSaved) return
+
+    if (savedRecordId) {
       setIsSaved(false)
-      return deleteSavePost(savedPostRecord.$id)
+      const currentSavedRecordId = savedRecordId
+      setSavedRecordId(null)
+
+      return deleteSavePost(currentSavedRecordId, {
+        onError: () => {
+          setIsSaved(true)
+          setSavedRecordId(currentSavedRecordId)
+        },
+      })
     }
 
-    savePost({ postId: post?.$id || "", userId: userId })
     setIsSaved(true)
+    savePost(
+      { postId: post?.$id || "", userId: userId },
+      {
+        onSuccess: (data) => {
+          if (data) {
+            setSavedRecordId(data.$id)
+          }
+        },
+        onError: () => {
+          setIsSaved(false)
+        },
+      },
+    )
   }
 
   const containerStyles = location.pathname.startsWith("/profile")

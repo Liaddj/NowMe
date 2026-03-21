@@ -1,5 +1,5 @@
 import { ID, Query } from "appwrite"
-import { mapPost, mapPosts, mapUser } from "./mappers";
+import { mapPost, mapPosts, mapUser } from "./mappers"
 
 import type { INewPost, INewUser, IUpdatePost, IPost, IUser } from "@/types"
 import { account, appwriteConfig, avatars, databases, storage } from "./config"
@@ -66,19 +66,29 @@ export async function signInAccount(user: { email: string; password: string }) {
 }
 
 export async function getCurrentUser(): Promise<IUser> {
-  const accountData = await account.get();
+  const accountData = await account.get()
 
   const res = await databases.listDocuments(
     appwriteConfig.databaseId,
     appwriteConfig.userCollectionId,
-    [Query.equal("accountId", accountData.$id)]
-  );
+    [
+      Query.equal("accountId", accountData.$id),
+      Query.select([
+        "*",
+        "save.*",
+        "save.post.*",
+        "save.post.likes.*",
+        "save.post.creator.*",
+      ]),
+    ],
+  )
 
   if (!res.documents.length) {
-    throw new Error("User not found");
+    throw new Error("User not found")
   }
 
-  return mapUser(res.documents[0]);
+  // עכשיו res.documents[0] יכיל את מערך השמירות המלא
+  return mapUser(res.documents[0])
 }
 
 export async function signOutAccount() {
@@ -92,15 +102,13 @@ export async function signOutAccount() {
 }
 
 export async function createPost(post: INewPost): Promise<IPost> {
-  const uploadedFile = await uploadFile(post.file[0]);
-  if (!uploadedFile) throw new Error("Upload failed");
+  const uploadedFile = await uploadFile(post.file[0])
+  if (!uploadedFile) throw new Error("Upload failed")
 
-  const fileUrl = getFilePreview(uploadedFile.$id);
-  if (!fileUrl) throw new Error("Preview failed");
+  const fileUrl = getFilePreview(uploadedFile.$id)
+  if (!fileUrl) throw new Error("Preview failed")
 
-  const tags = post.tags
-    ? post.tags.replace(/ /g, "").split(",")
-    : [];
+  const tags = post.tags ? post.tags.replace(/ /g, "").split(",") : []
 
   const newPost = await databases.createDocument(
     appwriteConfig.databaseId,
@@ -113,10 +121,10 @@ export async function createPost(post: INewPost): Promise<IPost> {
       imageId: uploadedFile.$id,
       location: post.location,
       tags,
-    }
-  );
+    },
+  )
 
-  return mapPost(newPost);
+  return mapPost(newPost)
 }
 export async function uploadFile(file: File) {
   try {
@@ -159,11 +167,11 @@ export async function getRecentPosts(): Promise<IPost[]> {
     [
       Query.orderDesc("$createdAt"),
       Query.limit(20),
-      Query.select(["*", "creator.*", "likes.*"]),
-    ]
-  );
+      Query.select(["*", "creator.*", "likes.*", "save.*"]),
+    ],
+  )
 
-  return mapPosts(res.documents);
+  return mapPosts(res.documents)
 }
 
 export async function likePost(postId: string, likesArray: string[]) {
@@ -222,10 +230,10 @@ export async function getPostById(postId: string): Promise<IPost> {
     appwriteConfig.databaseId,
     appwriteConfig.postCollectionId,
     postId,
-    [Query.select(["*", "creator.*", "likes.*"])]
-  );
+    [Query.select(["*", "creator.*", "likes.*", "save.*"])],
+  )
 
-  return mapPost(doc);
+  return mapPost(doc)
 }
 
 export async function updatePost(post: IUpdatePost) {
@@ -340,5 +348,31 @@ export async function SearchPosts(searchTerm: string) {
   } catch (error) {
     console.log(error)
     throw error
+  }
+}
+
+
+export async function getUserPosts(userId: string) {
+  if (!userId) return;
+
+  try {
+    const posts = await databases.listDocuments(
+      appwriteConfig.databaseId,
+      appwriteConfig.postCollectionId,
+      [
+        Query.equal("creator", userId),
+        Query.orderDesc("$createdAt"),
+        Query.select(["*", "creator.*", "likes.*", "save.*"]),
+      ]
+    );
+
+    if (!posts) throw Error;
+
+    return {
+      documents: mapPosts(posts.documents),
+      total: posts.total,
+    };
+  } catch (error) {
+    console.log(error);
   }
 }

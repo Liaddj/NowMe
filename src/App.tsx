@@ -5,7 +5,7 @@ import SigninForm from './_auth/forms/SigninForm'
 import SignupForm from './_auth/forms/SignupForm'
 import AuthLayout from './_auth/AuthLayout'
 import RootLayout from './_root/RootLayout'
-import { AllUsers, CreatePost, EditPost, Home, PostDetails, Profile, Saved, UpdateProfile } from './_root/pages'
+import { CreatePost, EditPost, Home, PostDetails, Profile, Saved, UpdateProfile } from './_root/pages'
 import { Toaster } from 'sonner'
 import Explore from './_root/pages/Explore'
 
@@ -24,7 +24,6 @@ const App = () => {
           <Route index element={<Home/>} />
           <Route path="/explore" element={<Explore />} />
           <Route path="/saved" element={<Saved />} />
-          <Route path="/all-users" element={<AllUsers />} />
           <Route path="/create-post" element={<CreatePost />} />
           <Route path="/update-post/:id" element={<EditPost />} />
           <Route path="/posts/:id" element={<PostDetails />} />
